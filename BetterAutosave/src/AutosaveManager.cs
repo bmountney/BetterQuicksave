@@ -8,11 +8,22 @@ namespace AutoSaveMod
     {
         public static string GetAutosaveName()
         {
-            if (currentAutosaveNum >= Main.Config.MaxAutosaves)
+            string characterName = Main.Config.PerCharacterSaves ? $"{AutosaveConfig.CurrentPlayerName} " : string.Empty;
+            string id;
+            if (Main.Config.UseDateTimeSuffix)
             {
-                currentAutosaveNum = 0;
+                DateTime ts = DateTime.Now;
+                id = $"{ts.Year:0000}" + $"{ts.Month:00}" + $"{ts.Day:00}" + $"-{ts.Hour:00}" + $"{ts.Minute:00}" + $"{ts.Second:00}"; // + $"-{ts.Millisecond:000}";
             }
-            return string.Format("{0}{1:000}", Main.Config.AutosavePrefix, ++currentAutosaveNum);
+            else
+            {
+                if (currentAutosaveNum >= Main.Config.MaxAutosaves)
+                {
+                    currentAutosaveNum = 0;
+                }
+                id = $"{++currentAutosaveNum:000}";
+            }
+            return $"{characterName}{Main.Config.AutosavePrefix}{id}{Main.Config.AutosaveSuffix}";
         }
 
         public static bool IsValidName(string name)

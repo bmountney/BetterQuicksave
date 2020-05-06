@@ -1,32 +1,52 @@
 ﻿using System;
 using System.IO;
 using System.Reflection;
+using System.Text.RegularExpressions;
 using System.Xml.Serialization;
+using TaleWorlds.CampaignSystem;
+using TaleWorlds.ObjectSystem;
 
 namespace AutoSaveMod
 {
     public class AutosaveConfig
     {
         [XmlIgnore]
-        public string AutosavePrefix
-        {
-            get
-            {
-                return "autosave_";
-            }
-        }
-
-        [XmlIgnore]
         public string AutosaveNamePattern
         {
             get
             {
-                return "^" + this.AutosavePrefix + "(\\d{3})$";
+                string playerCharacterName = string.Empty;
+                if (Main.Config.PerCharacterSaves && CurrentPlayerName.Length > 0)
+                {
+                    playerCharacterName = $"{Regex.Escape(CurrentPlayerName)} ";
+                }
+                string prefix = Regex.Escape(Main.Config.AutosavePrefix);
+                string id;
+                string suffix = Regex.Escape(Main.Config.AutosaveSuffix);
+                if (UseDateTimeSuffix)
+                    id = @"(\d{8}-\d{6})";
+                else
+                    id = @"(\d{3})";
+                return $"^{playerCharacterName}^{prefix}{id}{suffix}$";
             }
         }
 
+        public static string CurrentPlayerName
+        {
+            get
+            {
+                Hero player = Campaign.Current?.MainParty?.LeaderHero;
+                return player != null ? $"{player.Name} {player.Clan.Name}" : "No Name";
+            }
+        }
+
+        public string AutosavePrefix { get; set; } = "autosave ";
+        public string AutosaveSuffix { get; set; } = "";
         public int MaxAutosaves { get; set; } = 5;
         public int AutoSaveTimeInMinutes { get; set; } = 15;
+        public bool PerCharacterSaves { get; set; } = false;
+        public bool UseDateTimeSuffix { get; set; } = false;
+
         private static string ConfigFilename
         {
             get
